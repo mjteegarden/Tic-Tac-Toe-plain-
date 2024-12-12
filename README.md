@@ -1,6 +1,6 @@
 '''
 TIC-TAC-TOE
-version 1.0
+version 2.0
 
-First approach to designing and writing.
+Heavily revised.
 '''

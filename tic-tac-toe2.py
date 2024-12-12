@@ -19,16 +19,16 @@ AI - random field choice made by program
 # MODULES to import
 import os
 import random
-import sys
+
+
+# Game board status; game status
+game_ended = False
 
 
 # CELL INFORMATION
-# the cells of the game_board (empty, or O, or X)
 cell_empty = "[ ]"
 cell_O = "[O]"
 cell_X = "[X]"
-board_full = False
-game_ended = False
 
 
 # each cell has its number (1-9), its coordinates (row, column; each 1-3), and cell status (default: cell_empty)
@@ -43,8 +43,7 @@ cell8 = [8, 2, 1, cell_empty]
 cell9 = [9, 2, 2, cell_empty]
 
 
-# prepare screen for game play: (1) screen clearing; (2) pseudo-randomization
-# os.system("cls")
+# prepare pseudo-randomization for game play
 random.seed()
 
 
@@ -55,45 +54,34 @@ game_board = [cell1, cell2, cell3, cell4, cell5, cell6, cell7, cell8, cell9]
 # function displays game_board on-screen
 def display_game_board():
     os.system("cls")
-    for x in range(9):
+    for x in range(len(game_board)):
         print(game_board[x][3], end="")     # print cells on same line: only element 3 (cell's contents)
-        if ((x + 1) % 3) == 0:              # if cell is 3, 6, or 9, make new line
+        if ((x + 1) % 3) == 0:              # at every 3rd cell (3, 6, 9), make new line
             print()                         # print space afterward
 
 
 # function checks for victory, tie, or continuing play
-def check_victory(game_piece):     # check if game meets victory condition (game_piece is cell_X or cell_O)
-    if (game_board[0][3] == game_board[1][3] == game_board[2][3] == game_piece) or\
-        (game_board[3][3] == game_board[4][3] == game_board[5][3] == game_piece) or\
-        (game_board[6][3] == game_board[7][3] == game_board[8][3] == game_piece) or\
-        (game_board[0][3] == game_board[3][3] == game_board[6][3] == game_piece) or\
-        (game_board[1][3] == game_board[4][3] == game_board[7][3] == game_piece) or\
-        (game_board[2][3] == game_board[5][3] == game_board[8][3] == game_piece) or\
-        (game_board[0][3] == game_board[4][3] == game_board[8][3] == game_piece) or\
-        (game_board[2][3] == game_board[4][3] == game_board[6][3] == game_piece):
-        print("Player ", game_piece, "wins!")
-        game_ended = True
-        sys.exit()
+def check_victory(game_piece):     # check if cell_X or cell_O meets victory condition
+    global game_ended
+    winning_combinations = [(0, 1, 2), (3, 4, 5), (6, 7, 8), (0, 3, 6), (1, 4, 7), (2, 5, 8), (0, 4, 8), (2, 4, 6)]
 
-    else:           # check if tie...all game_board cells are full
-        board_full = False
-        for cell in range(len(game_board)):
-            if game_board[cell][3] != cell_empty:
-                board_full == True
-                exit
-            else:
-                board_full == False
-
-        if board_full == True:
-            print("It's a tie!")
+    for combo in winning_combinations:
+        if game_board[combo[0]][3] == game_board[combo[1]][3] == game_board[combo[2]][3] == game_piece:
+            print(f"Player {game_piece} wins!")
             game_ended = True
-            sys.exit()
-        else:
+            return True
+    return False
+
+
+def check_tie():
+    for cell in game_board:
+        if cell[3] == cell_empty:
             return False
+    print("It's a tie!")
+    return True
 
 
 # MAIN GAME LOOP
-# while (no victory or tie yet) is True:
 #     computer "X" goes first
 #     display_game_board
 #     user "O" goes second
@@ -104,55 +92,56 @@ def check_victory(game_piece):     # check if game meets victory condition (game
 #     Tie: print Tied-No-Victory message; exit program
 #     Not done yet: No victory message; continue game loop
 
-while (game_ended) == False:
-    
+
+while not game_ended:
     # COMPUTER PLAYS
     # computer decides which cell to take for "X"; AI uses random choice
     # then display updated game_board
     # then check for victory conditions
-    cell_avail = True
 
-    while cell_avail == True:
+    while True:
         comp_choice = random.randint(0, 8)                      # come up with random number 0-8 (1-9 minus 1) 
         if game_board[comp_choice][3] == cell_empty:        # if the chosen cell is empty, use it
             game_board[comp_choice][3] = cell_X             # update game board
-            check_victory(cell_X)
-            cell_avail = False
-            # break
-        else: 
-            cell_avail = True
-
-    # display_game_board
-    display_game_board()
+            display_game_board()            
+            if check_victory(cell_X):
+                game_ended = True
+                break
+            if check_tie():
+                game_ended = True
+                break
+        break
+            
 
 
     # USER PLAYS
     # display updated game_board
     # check for victory conditions
 
-    cell_avail = False
-    while not (cell_avail):
-        user_cell = int((input("Select an empty cell for 'O' [1-9]: ")))
-        if (1 <= user_cell <= 9):         # if user_cell is an integer and 1-9
-            cell_avail == True
-            break
-        else:
-            cell_avail == False
+    while True:
+        user_input = (input("Select an empty cell [1-9] for O: "))
+        try:
+            user_cell = int(user_input) - 1
+            if 0 <= user_cell <= 8 and game_board[user_cell][3] == cell_empty:
+                game_board[user_cell][3] = cell_O
+                display_game_board
+                if check_victory(cell_O):
+                    game_ended = True
+                    break
+                if check_tie():
+                    game_ended = True
+                    break        
+                break
 
-    # cell_avail = True
-    while cell_avail == True:
-        if game_board[user_cell - 1][3] == cell_empty:
-            game_board[user_cell - 1][3] = cell_O
-            check_victory(cell_O)
-            cell_avail = False
-            # break
-        else:
-            cell_avail = True
+            else: 
+                print("Select an empty cell [1-9] for O: ")
+
+        except ValueError:
+            print("Select an empty cell [1-9] for O.")
 
 
-    # display_game_board
-    display_game_board()
     #  RETURN TO MAIN GAME LOOP
+
 
 
 '''
@@ -163,8 +152,12 @@ empty_row = "|       |       |       |"
 game_board_cells = [[], [], []]     # board[row][column]
 '''
 
+
 '''
 TODO list
+-- remove the 'coordinate' elements from cells; elements 1 and 2 in each cell 
+--      (they're unnecessary) (or make use of them)
 -- expand display to match cisco academy project
--- 
+# TO-DO - change the game_board list to a tuple (but keep individual cell lists as-is)
+
 '''
